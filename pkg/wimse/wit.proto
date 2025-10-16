@@ -12,7 +12,6 @@ message WITSVIDRequest {
     // Optional. The requested SPIFFE ID for the WIT-SVID. If unset, all WIT-SVIDs
     // to which the workload is entitled are requested.
     string spiffe_id = 1;
-    string key = 2;
 }
 
 // The WITSVIDResponse message carries WIT-SVIDs .

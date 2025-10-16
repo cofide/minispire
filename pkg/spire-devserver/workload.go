@@ -263,7 +263,7 @@ func (w *WorkloadHandler) generateSpiffeID(ctx context.Context) (*id.SPIFFEID, e
 	return id.NewID(w.c.Domain, info)
 }
 
-func (w *WorkloadHandler) FetchJWTPOP(ctx context.Context, req *wimse_pb.WITSVIDRequest) (*wimse_pb.WITSVIDResponse, error) {
+func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVIDRequest) (*wimse_pb.WITSVIDResponse, error) {
 	resp := new(wimse_pb.WITSVIDResponse)
 
 	sid, err := w.generateSpiffeID(ctx)
@@ -272,6 +272,7 @@ func (w *WorkloadHandler) FetchJWTPOP(ctx context.Context, req *wimse_pb.WITSVID
 	}
 
 	jwk := jose.JSONWebKey{}
+	err = jwk.UnmarshalJSON([]byte(req.Key))
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON Web Key: %v", err)
 	}

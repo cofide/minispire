@@ -130,7 +130,7 @@ func (i *InMemoryCA) GetCACert() []byte {
 	return i.caCertBytes
 }
 
-func (i *InMemoryCA) SignWorkloadJWTSVID(ctx context.Context, params WorkloadJWTSVIDParams) (string, error) {
+func (i *InMemoryCA) SignWorkloadJWTSVID(ctx context.Context, params WorkloadWITSVIDParams) (string, error) {
 	if params.TTL == 0 {
 		params.TTL = time.Minute * 5
 	}
@@ -201,7 +201,7 @@ func (i *InMemoryCA) ValidateWorkloadJWTSVID(rawToken string, id spiffeid.ID) (*
 	return &claims, nil
 }
 
-func (i *InMemoryCA) SignWorkloadJWTSVIDPOP(ctx context.Context, params WorkloadJWTPOParams) (string, error) {
+func (i *InMemoryCA) SignWorkloadJWTSVIDPOP(ctx context.Context, params WorkloadWITSVIDKeyParams) (string, error) {
 	if params.TTL == 0 {
 		params.TTL = time.Minute * 5
 	}

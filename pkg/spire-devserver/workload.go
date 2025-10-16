@@ -168,7 +168,7 @@ func (w *WorkloadHandler) FetchJWTSVID(ctx context.Context, req *pb.JWTSVIDReque
 		return nil, err
 	}
 
-	token, err := w.c.CA.SignWorkloadJWTSVID(ctx, WorkloadJWTSVIDParams{
+	token, err := w.c.CA.SignWorkloadJWTSVID(ctx, WorkloadWITSVIDParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,
 		Audience: req.Audience,
@@ -277,7 +277,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		return nil, fmt.Errorf("failed to unmarshal JSON Web Key: %v", err)
 	}
 
-	token, err := w.c.CA.SignWorkloadJWTSVIDPOP(ctx, WorkloadJWTPOParams{
+	token, err := w.c.CA.SignWorkloadJWTSVIDPOP(ctx, WorkloadWITSVIDKeyParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,
 		Key:      jwk,

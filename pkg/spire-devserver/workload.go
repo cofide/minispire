@@ -41,7 +41,7 @@ type WorkloadHandler struct {
 	svids map[string]svidData
 
 	pb.UnimplementedSpiffeWorkloadAPIServer
-	wimse_pb.UnimplementedSpireJWTPOPExtensionServer
+	wimse_pb.UnimplementedMiniSPIREWorkloadAPIServer
 }
 
 func NewWorkloadHandler(c Config) *WorkloadHandler {
@@ -263,8 +263,8 @@ func (w *WorkloadHandler) generateSpiffeID(ctx context.Context) (*id.SPIFFEID, e
 	return id.NewID(w.c.Domain, info)
 }
 
-func (w *WorkloadHandler) FetchJWTPOP(ctx context.Context, req *wimse_pb.JWTPOPRequest) (*wimse_pb.JWTPOPResponse, error) {
-	resp := new(wimse_pb.JWTPOPResponse)
+func (w *WorkloadHandler) FetchJWTPOP(ctx context.Context, req *wimse_pb.WITSVIDRequest) (*wimse_pb.WITSVIDResponse, error) {
+	resp := new(wimse_pb.WITSVIDResponse)
 
 	sid, err := w.generateSpiffeID(ctx)
 	if err != nil {
@@ -272,14 +272,12 @@ func (w *WorkloadHandler) FetchJWTPOP(ctx context.Context, req *wimse_pb.JWTPOPR
 	}
 
 	jwk := jose.JSONWebKey{}
-	err = jwk.UnmarshalJSON([]byte(req.Key))
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON Web Key: %v", err)
 	}
 
 	token, err := w.c.CA.SignWorkloadJWTSVIDPOP(ctx, WorkloadJWTPOParams{
 		SPIFFEID: sid.ToSpiffeID(),
-		Audience: req.Audience,
 		TTL:      time.Minute * 5,
 		Key:      jwk,
 	})
@@ -289,9 +287,10 @@ func (w *WorkloadHandler) FetchJWTPOP(ctx context.Context, req *wimse_pb.JWTPOPR
 
 	fmt.Printf("JWT SVID issued: %s\n", token)
 
-	resp.Svids = append(resp.Svids, &wimse_pb.JWTPOPSVID{
-		SpiffeId: sid.String(),
-		Svid:     token,
+	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
+		SpiffeId:   sid.String(),
+		WitSvid:    token,
+		WitSvidKey: "", //TODO: Serialise with key
 	})
 
 	return resp, nil

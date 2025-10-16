@@ -41,7 +41,7 @@ func main() {
 		CA:     ca,
 	})
 	pb.RegisterSpiffeWorkloadAPIServer(grpcServer, wl)
-	wimse_pb.RegisterSpireJWTPOPExtensionServer(grpcServer, wl)
+	wimse_pb.RegisterMiniSPIREWorkloadAPIServer(grpcServer, wl)
 
 	go func() {
 		fmt.Println("SPIRE server listening on", spireSocket)

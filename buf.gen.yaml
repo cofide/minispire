@@ -2,13 +2,13 @@ version: v2
 plugins:
   # Go
   - local: protoc-gen-go
-    out: pkg/wimse/gen/go/
+    out: .
     opt:
       - paths=source_relative
 
   # Go gRPC
   - remote: buf.build/grpc/go:v1.5.1
-    out: pkg/wimse/gen/go/
+    out: .
     opt:
       - paths=source_relative
       - require_unimplemented_servers=false

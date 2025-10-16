@@ -291,7 +291,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
 		SpiffeId:   sid.String(),
 		WitSvid:    token,
-		WitSvidKey: "", //TODO: Serialise with key
+		WitSvidKey: req.Key,
 	})
 
 	return resp, nil

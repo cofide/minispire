@@ -272,7 +272,9 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 	}
 
 	jwk := jose.JSONWebKey{}
-	err = jwk.UnmarshalJSON([]byte(req.Key))
+	// TODO: JWK should be issued by minispire here (equivalant to
+	// X509SVID in the identity server of the Workload API spec,
+	// which is actually the spire-agent in the SPIRE architecture)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON Web Key: %v", err)
 	}
@@ -291,7 +293,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
 		SpiffeId:   sid.String(),
 		WitSvid:    token,
-		WitSvidKey: req.Key,
+		WitSvidKey: "", // TODO: Populate from minispire
 	})
 
 	return resp, nil

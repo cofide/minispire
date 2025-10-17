@@ -276,7 +276,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 	// X509SVID in the identity server of the Workload API spec,
 	// which is actually the spire-agent in the SPIRE architecture)
 
-	token, err := w.c.CA.SignWorkloadJWTSVIDPOP(ctx, WorkloadWITSVIDKeyParams{
+	token, err := w.c.CA.SignWorkloadWITSVIDKey(ctx, WorkloadWITSVIDKeyParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,
 		Key:      jwk,

@@ -201,7 +201,7 @@ func (i *InMemoryCA) ValidateWorkloadJWTSVID(rawToken string, id spiffeid.ID) (*
 	return &claims, nil
 }
 
-func (i *InMemoryCA) SignWorkloadJWTSVIDPOP(ctx context.Context, params WorkloadWITSVIDKeyParams) (string, error) {
+func (i *InMemoryCA) SignWorkloadWITSVIDKey(ctx context.Context, params WorkloadWITSVIDKeyParams) (string, error) {
 	if params.TTL == 0 {
 		params.TTL = time.Minute * 5
 	}

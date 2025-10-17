@@ -145,7 +145,7 @@ func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWIT
 
 	alg, err := cryptoutil.JoseAlgFromPublicKey(i.jwtKey.Signer.Public())
 	if err != nil {
-		return "", fmt.Errorf("failed to determine JWT key algorithm: %w", err)
+		return "", fmt.Errorf("failed to determine WIT key algorithm: %w", err)
 	}
 
 	jwtSigner, err := jose.NewSigner(
@@ -159,12 +159,12 @@ func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWIT
 		new(jose.SignerOptions).WithType("JWT"),
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to configure JWT signer: %w", err)
+		return "", fmt.Errorf("failed to configure WIT signer: %w", err)
 	}
 
 	signedToken, err := jwt.Signed(jwtSigner).Claims(claims).Serialize()
 	if err != nil {
-		return "", fmt.Errorf("failed to sign JWT SVID: %w", err)
+		return "", fmt.Errorf("failed to sign WIT SVID: %w", err)
 	}
 
 	if _, err := i.ValidateWorkloadJWTSVID(signedToken, params.SPIFFEID); err != nil {
@@ -235,12 +235,12 @@ func (i *InMemoryCA) SignWorkloadWITSVIDKey(ctx context.Context, params Workload
 		new(jose.SignerOptions).WithType("wimse-id+jwt"),
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to configure JWT signer: %w", err)
+		return "", fmt.Errorf("failed to configure WIT signer: %w", err)
 	}
 
 	signedToken, err := jwt.Signed(jwtSigner).Claims(claims).Serialize()
 	if err != nil {
-		return "", fmt.Errorf("failed to sign JWT SVID: %w", err)
+		return "", fmt.Errorf("failed to sign WIT SVID: %w", err)
 	}
 
 	if _, err := i.ValidateWorkloadJWTSVID(signedToken, params.SPIFFEID); err != nil {

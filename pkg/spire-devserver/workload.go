@@ -280,7 +280,11 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		keyBytes: key,
 	}
 
-	jwk := jose.JSONWebKey{Key: publicKey}
+	jwk := jose.JSONWebKey{
+		Key:       publicKey,
+		Algorithm: "ES256",
+		Use:       "sig",
+	}
 	token, err := w.c.CA.SignWorkloadWITSVIDKey(ctx, WorkloadWITSVIDKeyParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,

@@ -271,11 +271,16 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		return nil, err
 	}
 
-	jwk := jose.JSONWebKey{}
-	// TODO: JWK should be issued by minispire here (equivalant to
-	// X509SVID in the identity server of the Workload API spec,
-	// which is actually the spire-agent in the SPIRE architecture)
+	key, publicKey, err := generateWorkloadKeyPair()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generated workload keypair: %v", err)
+	}
 
+	w.svids[sid.String()] = svidData{
+		keyBytes: key,
+	}
+
+	jwk := jose.JSONWebKey{Key: publicKey}
 	token, err := w.c.CA.SignWorkloadWITSVIDKey(ctx, WorkloadWITSVIDKeyParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,
@@ -287,11 +292,29 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 
 	fmt.Printf("WIT-SVID issued: %s\n", token)
 
+	witSVIDKey, ok := jwk.Key.([]byte)
+	if !ok {
+		return nil, fmt.Errorf("failed to unmarshall WITSVIDKey")
+	}
 	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
 		SpiffeId:   sid.String(),
 		WitSvid:    token,
-		WitSvidKey: "", // TODO: Populate from minispire
+		WitSvidKey: string(witSVIDKey),
 	})
 
 	return resp, nil
+}
+
+func generateWorkloadKeyPair() ([]byte, crypto.PublicKey, error) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pkcs8Key, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return pkcs8Key, key.PublicKey, nil
 }

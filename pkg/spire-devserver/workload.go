@@ -285,7 +285,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		return nil, fmt.Errorf("failed to sign JWT SVID: %v", err)
 	}
 
-	fmt.Printf("JWT SVID issued: %s\n", token)
+	fmt.Printf("WIT-SVID issued: %s\n", token)
 
 	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
 		SpiffeId:   sid.String(),

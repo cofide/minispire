@@ -287,7 +287,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		Key:      jwk,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign JWT SVID: %v", err)
+		return nil, fmt.Errorf("failed to sign WIT SVID: %v", err)
 	}
 
 	fmt.Printf("WIT-SVID issued: %s\n", token)

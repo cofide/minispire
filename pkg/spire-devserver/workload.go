@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -271,24 +272,23 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		return nil, err
 	}
 
-	key, publicKey, err := generateWorkloadKeyPair()
+	publicKey, privateKey, err := generateWorkloadKeyPair()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generated workload keypair: %v", err)
 	}
 
 	w.svids[sid.String()] = svidData{
-		keyBytes: key,
+		keyBytes: privateKey,
 	}
 
-	jwk := jose.JSONWebKey{
-		Key:       publicKey,
-		Algorithm: "ES256",
-		Use:       "sig",
-	}
 	token, err := w.c.CA.SignWorkloadWITSVIDKey(ctx, WorkloadWITSVIDKeyParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,
-		Key:      jwk,
+		Key: jose.JSONWebKey{
+			Key:       publicKey,
+			Algorithm: "ES256",
+			Use:       "sig",
+		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign WIT SVID: %v", err)
@@ -296,29 +296,30 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 
 	fmt.Printf("WIT-SVID issued: %s\n", token)
 
-	witSVIDKey, ok := jwk.Key.([]byte)
-	if !ok {
-		return nil, fmt.Errorf("failed to unmarshall WITSVIDKey")
-	}
 	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
 		SpiffeId:   sid.String(),
 		WitSvid:    token,
-		WitSvidKey: string(witSVIDKey),
+		WitSvidKey: base64.StdEncoding.EncodeToString(privateKey),
 	})
 
 	return resp, nil
 }
 
-func generateWorkloadKeyPair() ([]byte, crypto.PublicKey, error) {
+func generateWorkloadKeyPair() ([]byte, []byte, error) {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	pkcs8Key, err := x509.MarshalPKCS8PrivateKey(key)
+	privateKey, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return pkcs8Key, key.PublicKey, nil
+	publicKey, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return publicKey, privateKey, nil
 }

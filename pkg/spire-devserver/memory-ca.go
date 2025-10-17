@@ -130,7 +130,7 @@ func (i *InMemoryCA) GetCACert() []byte {
 	return i.caCertBytes
 }
 
-func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWITSVIDParams) (string, error) {
+func (i *InMemoryCA) SignWorkloadJWTSVID(ctx context.Context, params WorkloadJWTSVIDParams) (string, error) {
 	if params.TTL == 0 {
 		params.TTL = time.Minute * 5
 	}
@@ -159,12 +159,12 @@ func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWIT
 		new(jose.SignerOptions).WithType("JWT"),
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to configure WIT signer: %w", err)
+		return "", fmt.Errorf("failed to configure JWT signer: %w", err)
 	}
 
 	signedToken, err := jwt.Signed(jwtSigner).Claims(claims).Serialize()
 	if err != nil {
-		return "", fmt.Errorf("failed to sign WIT SVID: %w", err)
+		return "", fmt.Errorf("failed to sign JWT SVID: %w", err)
 	}
 
 	if _, err := i.ValidateWorkloadJWTSVID(signedToken, params.SPIFFEID); err != nil {
@@ -201,17 +201,17 @@ func (i *InMemoryCA) ValidateWorkloadJWTSVID(rawToken string, id spiffeid.ID) (*
 	return &claims, nil
 }
 
-func (i *InMemoryCA) SignWorkloadWITSVIDKey(ctx context.Context, params WorkloadWITSVIDKeyParams) (string, error) {
+func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWITSVIDParams) (string, error) {
 	if params.TTL == 0 {
 		params.TTL = time.Minute * 5
 	}
 
 	claims := map[string]any{
 		"sub": params.SPIFFEID,
-		"aud": params.Audience,
+		"aud": "", // TODO: aud is not part of the WIMSE WIT spec, but is required by the signer here
 		"exp": jwt.NewNumericDate(time.Now().Add(params.TTL)),
 		"iat": jwt.NewNumericDate(time.Now()),
-		"iss": fmt.Sprintf("spiffe://%s", params.SPIFFEID.TrustDomain()),
+		"iss": fmt.Sprintf("wimse://%s", params.SPIFFEID.TrustDomain()),
 		"cnf": map[string]any{
 			"jwk": params.Key,
 		},

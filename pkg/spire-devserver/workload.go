@@ -169,7 +169,7 @@ func (w *WorkloadHandler) FetchJWTSVID(ctx context.Context, req *pb.JWTSVIDReque
 		return nil, err
 	}
 
-	token, err := w.c.CA.SignWorkloadWITSVID(ctx, WorkloadWITSVIDParams{
+	token, err := w.c.CA.SignWorkloadJWTSVID(ctx, WorkloadJWTSVIDParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,
 		Audience: req.Audience,
@@ -281,7 +281,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		keyBytes: privateKey,
 	}
 
-	token, err := w.c.CA.SignWorkloadWITSVIDKey(ctx, WorkloadWITSVIDKeyParams{
+	token, err := w.c.CA.SignWorkloadWITSVID(ctx, WorkloadWITSVIDParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,
 		Key: jose.JSONWebKey{

@@ -20,8 +20,25 @@ const (
 )
 
 func main() {
-	fmt.Println("Building in-memory CA")
+	s := NewMiniSPIREServer()
+	s.Start()
 
+	// listen for signals to stop the server
+	osSignals := make(chan os.Signal, 1)
+	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
+	<-osSignals
+
+	fmt.Println("Shutting down server")
+	s.listener.Close()
+}
+
+type MiniSPIREServer struct {
+	server   *grpc.Server
+	listener net.Listener
+}
+
+func NewMiniSPIREServer() *MiniSPIREServer {
+	fmt.Println("Building in-memory CA")
 	kt := spiredevserver.KeyTypeECDSAP256
 	ca, err := spiredevserver.NewInMemoryCA(kt)
 	if err != nil {
@@ -43,16 +60,16 @@ func main() {
 	pb.RegisterSpiffeWorkloadAPIServer(grpcServer, wl)
 	wimse_pb.RegisterMiniSPIREWorkloadAPIServer(grpcServer, wl)
 
+	return &MiniSPIREServer{
+		listener: lis,
+		server:   grpcServer,
+	}
+}
+
+func (s *MiniSPIREServer) Start() {
+	fmt.Println("Starting minispire...")
 	go func() {
 		fmt.Println("SPIRE server listening on", spireSocket)
-		grpcServer.Serve(lis)
+		s.server.Serve(s.listener)
 	}()
-
-	// listen for signals to stop the server
-	osSignals := make(chan os.Signal, 1)
-	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
-	<-osSignals
-
-	fmt.Println("Shutting down server")
-	lis.Close()
 }

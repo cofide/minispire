@@ -275,9 +275,6 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 	// TODO: JWK should be issued by minispire here (equivalant to
 	// X509SVID in the identity server of the Workload API spec,
 	// which is actually the spire-agent in the SPIRE architecture)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON Web Key: %v", err)
-	}
 
 	token, err := w.c.CA.SignWorkloadJWTSVIDPOP(ctx, WorkloadWITSVIDKeyParams{
 		SPIFFEID: sid.ToSpiffeID(),

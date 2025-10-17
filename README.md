@@ -1,6 +1,8 @@
 # minispire
 
-`minispire` is a lightweight, experimental implementation of the [SPIFFE-compliant](https://spiffe.io) reference architecture [SPIRE](https://github.com/spiffe/spire). It provides an in-memory CA and partial implementation of the SPIFFE Workload API, and is geared towards rapid prototyping and experimentation in workload identity issuance and validation.
+`minispire` is a lightweight test utility for experimenting with aspects of the [SPIFFE](https://spiffe.io) standard. It provides an in-memory CA and a partial implementation of the SPIFFE Workload API. Unlike [SPIRE](https://github.com/spiffe/spire), `minispire` encapsulates both server and agent functionality into a single service.
+
+This tool is geared towards rapid prototyping and experimentation in workload identity issuance and validation. It should in no way be considered a complete SPIFFE implementation or suitable for production use.
 
 ## Running
 

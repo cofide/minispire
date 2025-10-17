@@ -130,7 +130,7 @@ func (i *InMemoryCA) GetCACert() []byte {
 	return i.caCertBytes
 }
 
-func (i *InMemoryCA) SignWorkloadJWTSVID(ctx context.Context, params WorkloadWITSVIDParams) (string, error) {
+func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWITSVIDParams) (string, error) {
 	if params.TTL == 0 {
 		params.TTL = time.Minute * 5
 	}

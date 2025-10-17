@@ -168,7 +168,7 @@ func (w *WorkloadHandler) FetchJWTSVID(ctx context.Context, req *pb.JWTSVIDReque
 		return nil, err
 	}
 
-	token, err := w.c.CA.SignWorkloadJWTSVID(ctx, WorkloadWITSVIDParams{
+	token, err := w.c.CA.SignWorkloadWITSVID(ctx, WorkloadWITSVIDParams{
 		SPIFFEID: sid.ToSpiffeID(),
 		TTL:      time.Minute * 5,
 		Audience: req.Audience,

@@ -232,7 +232,7 @@ func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWIT
 				KeyID: i.jwtKey.Kid,
 			},
 		},
-		new(jose.SignerOptions).WithType("wimse-id+jwt"),
+		new(jose.SignerOptions).WithType("wit+jwt"),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to configure WIT signer: %w", err)

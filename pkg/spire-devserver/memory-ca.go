@@ -145,7 +145,7 @@ func (i *InMemoryCA) SignWorkloadJWTSVID(ctx context.Context, params WorkloadJWT
 
 	alg, err := cryptoutil.JoseAlgFromPublicKey(i.jwtKey.Signer.Public())
 	if err != nil {
-		return "", fmt.Errorf("failed to determine WIT key algorithm: %w", err)
+		return "", fmt.Errorf("failed to determine JWT key algorithm: %w", err)
 	}
 
 	jwtSigner, err := jose.NewSigner(

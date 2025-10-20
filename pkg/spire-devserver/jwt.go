@@ -19,7 +19,7 @@ type JWTKey struct {
 	NotAfter time.Time
 }
 
-// WorkloadWITSVIDParams are parameters relevant to workload WIT-SVID creation
+// WorkloadJWTSVIDParams are parameters relevant to workload WIT-SVID creation
 type WorkloadJWTSVIDParams struct {
 	// SPIFFE ID of the SVID
 	SPIFFEID spiffeid.ID

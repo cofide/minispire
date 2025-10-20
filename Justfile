@@ -6,3 +6,6 @@ build:
 
 test *args:
     go run gotest.tools/gotestsum@latest --format github-actions ./... {{args}}
+
+run: build
+    ./minispire

@@ -1,0 +1,8 @@
+minispire
+
+# don't ignore pkgs named the same as binary!
+!minispire/
+
+# ide workspaces
+.idea
+.vscode

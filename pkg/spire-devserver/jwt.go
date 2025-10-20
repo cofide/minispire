@@ -19,7 +19,7 @@ type JWTKey struct {
 	NotAfter time.Time
 }
 
-// WorkloadJWTSVIDParams are parameters relevant to workload JWT-SVID creation
+// WorkloadJWTSVIDParams are parameters relevant to workload WIT-SVID creation
 type WorkloadJWTSVIDParams struct {
 	// SPIFFE ID of the SVID
 	SPIFFEID spiffeid.ID
@@ -32,17 +32,14 @@ type WorkloadJWTSVIDParams struct {
 	Audience []string
 }
 
-// WorkloadJWTSVIDParams are parameters relevant to workload JWT PoP creation
-type WorkloadJWTPOParams struct {
+// WorkloadWITSVIDKeyParams are parameters relevant to workload WIT SVID key PoP creation
+type WorkloadWITSVIDParams struct {
 	// SPIFFE ID of the SVID
 	SPIFFEID spiffeid.ID
 
 	// TTL is the desired time-to-live of the SVID. Regardless of the TTL, the
 	// lifetime of the token will be capped to that of the signing key.
 	TTL time.Duration
-
-	// Audience is used for audience claims
-	Audience string
 
 	Key jose.JSONWebKey
 }

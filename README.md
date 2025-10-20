@@ -4,6 +4,10 @@
 
 This tool is geared towards rapid prototyping and experimentation in workload identity issuance and validation. It should in no way be considered a complete SPIFFE implementation or suitable for production use.
 
+`minispire` exposes a SPIFFE workload API over a Unix domain socket at `/tmp/spire.sock`. Applications running on the same machine can use this API to obtain SPIFFE Secure Verifiable Identity Documents (SVIDs).
+
+`minispire` includes a prototype implementation of a workload API for the Workload Identity in Multi-System Environments (WIMSE) [Workload Identity Token (WIT)](https://datatracker.ietf.org/doc/draft-ietf-wimse-s2s-protocol/) SVID.
+
 ## Running
 
 You can run `minispire` directly from source with:

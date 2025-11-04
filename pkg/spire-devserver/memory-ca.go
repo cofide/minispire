@@ -254,12 +254,12 @@ func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWIT
 func (i *InMemoryCA) ValidateWorkloadWITSVID(rawToken string, id spiffeid.ID) (*jwt.Claims, error) {
 	token, err := jwt.ParseSigned(rawToken, jwtsvid.AllowedSignatureAlgorithms)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse JWT-SVID for validation: %w", err)
+		return nil, fmt.Errorf("failed to parse WIT-SVID for validation: %w", err)
 	}
 
 	var claims jwt.Claims
 	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return nil, fmt.Errorf("failed to extract JWT-SVID claims for validation: %w", err)
+		return nil, fmt.Errorf("failed to extract WIT-SVID claims for validation: %w", err)
 	}
 
 	now := time.Now()

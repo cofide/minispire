@@ -15,6 +15,7 @@ import (
 	"math/big"
 	"time"
 
+	cofideid "github.com/cofide/cofide-sdk-go/pkg/id"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/cryptosigner"
 	"github.com/go-jose/go-jose/v4/jwt"
@@ -207,7 +208,7 @@ func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWIT
 	}
 
 	claims := map[string]any{
-		"sub": params.SPIFFEID,
+		"sub": cofideid.FromSpiffeID(params.SPIFFEID).WIMSEIDString(),
 		"aud": "", // TODO: aud is not part of the WIMSE WIT spec, but is required by the signer here
 		"exp": jwt.NewNumericDate(time.Now().Add(params.TTL)),
 		"iat": jwt.NewNumericDate(time.Now()),
@@ -243,11 +244,36 @@ func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWIT
 		return "", fmt.Errorf("failed to sign WIT SVID: %w", err)
 	}
 
-	if _, err := i.ValidateWorkloadJWTSVID(signedToken, params.SPIFFEID); err != nil {
+	if _, err := i.ValidateWorkloadWITSVID(signedToken, params.SPIFFEID); err != nil {
 		return "", err
 	}
 
 	return signedToken, nil
+}
+
+func (i *InMemoryCA) ValidateWorkloadWITSVID(rawToken string, id spiffeid.ID) (*jwt.Claims, error) {
+	token, err := jwt.ParseSigned(rawToken, jwtsvid.AllowedSignatureAlgorithms)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse JWT-SVID for validation: %w", err)
+	}
+
+	var claims jwt.Claims
+	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		return nil, fmt.Errorf("failed to extract JWT-SVID claims for validation: %w", err)
+	}
+
+	now := time.Now()
+	switch {
+	case claims.Subject != cofideid.FromSpiffeID(id).WIMSEIDString():
+		return nil, fmt.Errorf(`invalid WIT-SVID "sub" claim: expected %q but got %q`, id, claims.Subject)
+	case claims.Expiry == nil:
+		return nil, errors.New(`invalid WIT-SVID "exp" claim: required but missing`)
+	case !claims.Expiry.Time().After(now):
+		return nil, fmt.Errorf(`invalid WIT-SVID "exp" claim: already expired as of %s`, claims.Expiry.Time().Format(time.RFC3339))
+	case claims.NotBefore != nil && claims.NotBefore.Time().After(now):
+		return nil, fmt.Errorf(`invalid WIT-SVID "nbf" claim: not yet valid until %s`, claims.NotBefore.Time().Format(time.RFC3339))
+	}
+	return &claims, nil
 }
 
 func generateJTI(claims map[string]any, spiffeID string) string {

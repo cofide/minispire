@@ -2,8 +2,6 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 h1:MzBOUgng9orim59UnfUTLRjMpd09C5uEVQ6RPGeCaVI=
 github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129/go.mod h1:rFgpPQZYZ8vdbc+48xibu8ALc3yeyd64IhHS+PU6Yyg=
-github.com/cofide/cofide-sdk-go v0.4.0 h1:1mbn1Slszz3onkp5SHf332MRDJE4ui4uie5Z2OZmhjQ=
-github.com/cofide/cofide-sdk-go v0.4.0/go.mod h1:MJ0iPUH0AmYZebiH5trHRWMvvBo+jLc5J4HwY7bcS0g=
 github.com/cofide/cofide-sdk-go v0.4.1 h1:VLF+t4Ixe8+lCB/sjOnt8o/jnRXN2WjEscIMDqgXsTk=
 github.com/cofide/cofide-sdk-go v0.4.1/go.mod h1:MJ0iPUH0AmYZebiH5trHRWMvvBo+jLc5J4HwY7bcS0g=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

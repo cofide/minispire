@@ -307,7 +307,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 func generateWorkloadKeyPair() (*ecdsa.PublicKey, []byte, error) {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return nil, nil, err // Return nil for both keys on error
+		return nil, nil, err
 	}
 
 	privateKeyBytes, err := x509.MarshalPKCS8PrivateKey(key)

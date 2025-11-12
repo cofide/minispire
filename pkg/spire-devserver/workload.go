@@ -272,13 +272,12 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		return nil, err
 	}
 
-	publicKey, privateKey, err := generateWorkloadKeyPair()
+	publicKey, privateKeyBytes, err := generateWorkloadKeyPair()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generated workload keypair: %v", err)
 	}
-
 	w.svids[sid.String()] = svidData{
-		keyBytes: privateKey,
+		keyBytes: privateKeyBytes,
 	}
 
 	token, err := w.c.CA.SignWorkloadWITSVID(ctx, WorkloadWITSVIDParams{
@@ -299,27 +298,22 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
 		SpiffeId:   sid.String(),
 		WitSvid:    token,
-		WitSvidKey: base64.StdEncoding.EncodeToString(privateKey),
+		WitSvidKey: base64.StdEncoding.EncodeToString(privateKeyBytes),
 	})
 
 	return resp, nil
 }
 
-func generateWorkloadKeyPair() ([]byte, []byte, error) {
+func generateWorkloadKeyPair() (*ecdsa.PublicKey, []byte, error) {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	privateKey, err := x509.MarshalPKCS8PrivateKey(key)
+	privateKeyBytes, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	publicKey, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return publicKey, privateKey, nil
+	return &key.PublicKey, privateKeyBytes, nil
 }

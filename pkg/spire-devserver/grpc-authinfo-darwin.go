@@ -5,7 +5,9 @@ package spiredevserver
 import (
 	"fmt"
 	"net"
+	"path/filepath"
 
+	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/unix"
 )
 
@@ -32,7 +34,6 @@ func getCallerInfo(conn *net.UnixConn) (CallerInfo, error) {
 			return
 		}
 		info.UID = cred.Uid
-		// Xucred contains groups, usually the first one is the primary GID
 		if len(cred.Groups) > 0 {
 			info.GID = cred.Groups[0]
 		}
@@ -42,11 +43,24 @@ func getCallerInfo(conn *net.UnixConn) (CallerInfo, error) {
 		return CallerInfo{}, sysErr
 	}
 
-	// Note: Getting the BinaryName on macOS is complex.
-	// It requires using CGO to call `proc_pidpath` from libproc,
-	// or calling the external `ps` command (which is slow).
-	// /proc does not exist on macOS.
-	info.BinaryName = "unknown-darwin"
+	info.BinaryName = resolveBinaryName(info.PID)
 
 	return info, nil
+}
+
+func resolveBinaryName(pid int32) string {
+	proc, err := process.NewProcess(pid)
+	if err != nil {
+		// Process likely exited between socket read and lookup
+		return "unknown-exited"
+	}
+
+	exePath, err := proc.Exe()
+	if err != nil {
+		// Permission denied or zombie process
+		return "unknown-denied"
+	}
+
+	// Strip path for clean SPIFFE ID
+	return filepath.Base(exePath)
 }

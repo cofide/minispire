@@ -21,6 +21,7 @@ import (
 	"github.com/spiffe/go-spiffe/v2/bundle/jwtbundle"
 	pb "github.com/spiffe/go-spiffe/v2/proto/spiffe/workload"
 	spiffeid "github.com/spiffe/go-spiffe/v2/spiffeid"
+	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
 	"google.golang.org/grpc/peer"
 )
 
@@ -225,11 +226,11 @@ func (w *WorkloadHandler) ValidateJWTSVID(ctx context.Context, req *pb.ValidateJ
 	if req.Svid == "" {
 		return nil, errors.New("svid must be specified")
 	}
-	svid, err := spiffeid.FromString(req.Svid)
+	svid, err := jwtsvid.ParseInsecure(req.Svid, []string{req.Audience})
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse SPIFFE ID: %v", err)
 	}
-	claims, err := w.c.CA.ValidateWorkloadJWTSVID(req.String(), svid)
+	claims, err := w.c.CA.ValidateWorkloadJWTSVID(svid.Marshal(), svid.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate JWT SVID: %v", err)
 	}
@@ -239,7 +240,7 @@ func (w *WorkloadHandler) ValidateJWTSVID(ctx context.Context, req *pb.ValidateJ
 	}
 
 	return &pb.ValidateJWTSVIDResponse{
-		SpiffeId: svid.String(),
+		SpiffeId: svid.ID.String(),
 	}, nil
 }
 

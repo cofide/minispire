@@ -179,7 +179,7 @@ func (w *WorkloadHandler) FetchJWTSVID(ctx context.Context, req *pb.JWTSVIDReque
 		return nil, fmt.Errorf("failed to sign JWT SVID: %v", err)
 	}
 
-	fmt.Printf("JWT SVID issued: %s\n", token)
+	log.Printf("JWT SVID issued: %s\n", token)
 
 	resp.Svids = append(resp.Svids, &pb.JWTSVID{
 		SpiffeId: sid.String(),
@@ -294,7 +294,7 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 		return nil, fmt.Errorf("failed to sign WIT SVID: %v", err)
 	}
 
-	fmt.Printf("WIT-SVID issued: %s\n", token)
+	log.Printf("WIT-SVID issued: %s\n", token)
 
 	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
 		SpiffeId:   sid.String(),

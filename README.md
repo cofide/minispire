@@ -21,3 +21,9 @@ Or as an external dependency
 ```
 go run github.com/cofide/minispire/cmd
 ```
+
+## Production Use Cases
+
+At [Cofide](https://www.cofide.io), we're building a workload identity platform that is seamless and secure for multi and hybrid cloud environments. Feel free to browse our [public documentation](https://docs.cofide.dev) or read our introductory [blog post](https://www.cofide.io/resources/introducing-cofide-connect-the-control-plane-for-workload-identity-and-access-management-iam) for more info.
+
+If you have a production use case for a workload identity platform with enterprise-level support, please [speak with us](https://www.cofide.io/contact) to find out more about our platform.

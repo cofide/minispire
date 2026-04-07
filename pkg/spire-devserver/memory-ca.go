@@ -71,6 +71,7 @@ func NewInMemoryCA(kt KeyType) (*InMemoryCA, error) {
 			StreetAddress: []string{""},
 			PostalCode:    []string{""},
 		},
+		NotBefore:             time.Now().Add(-time.Minute),
 		NotAfter:              time.Now().Add(time.Hour * 24 * 30), // setting 30 days to avoid people using this outside of development, no laptop lasts that long
 		SerialNumber:          caSerial,
 		IsCA:                  true,
@@ -112,10 +113,15 @@ func (i *InMemoryCA) Sign(csrBytes []byte) ([]byte, time.Time, error) {
 	// create SVID
 	svid := &x509.Certificate{
 		URIs:         csr.URIs,
+		NotBefore:    time.Now().Add(-time.Minute),
 		NotAfter:     time.Now().Add(4 * time.Minute), // set to 4 minutes for testing of rotation
 		KeyUsage:     x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		SerialNumber: svidSerial,
+		// Some clients require the BasicConstraints certificate
+		// extension to be present
+		BasicConstraintsValid: true,
+		MaxPathLen:            -1,
 	}
 
 	// sign SVID

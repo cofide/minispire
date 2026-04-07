@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/cofide/cofide-sdk-go/pkg/id"
@@ -40,7 +41,8 @@ type svidData struct {
 type WorkloadHandler struct {
 	c Config
 
-	svids map[string]svidData
+	svids   map[string]svidData
+	svidsMu sync.RWMutex
 
 	pb.UnimplementedSpiffeWorkloadAPIServer
 	wimse_pb.UnimplementedMiniSPIREWorkloadAPIServer
@@ -48,8 +50,8 @@ type WorkloadHandler struct {
 
 func NewWorkloadHandler(c Config) *WorkloadHandler {
 	return &WorkloadHandler{
-		c:     c,
-		svids: make(map[string]svidData),
+		c:       c,
+		svids:   make(map[string]svidData),
 	}
 }
 
@@ -62,7 +64,10 @@ func (w *WorkloadHandler) FetchX509SVID(req *pb.X509SVIDRequest, resp pb.SpiffeW
 
 	log.Printf("Issuing SVID for %s", spiffeID.String())
 
-	if data, ok := w.svids[spiffeID.String()]; ok && time.Now().Add(2*time.Minute).Before(data.expiry) {
+	w.svidsMu.RLock()
+	data, ok := w.svids[spiffeID.String()]
+	w.svidsMu.RUnlock()
+	if ok && time.Now().Add(2*time.Minute).Before(data.expiry) {
 		err := resp.Send(&pb.X509SVIDResponse{
 			Svids: []*pb.X509SVID{
 				{
@@ -120,11 +125,13 @@ func (w *WorkloadHandler) FetchX509SVID(req *pb.X509SVIDRequest, resp pb.SpiffeW
 		return err
 	}
 
+	w.svidsMu.Lock()
 	w.svids[spiffeID.String()] = svidData{
 		certBytes: svidBytes,
 		keyBytes:  pkcs8Key,
 		expiry:    notAfter,
 	}
+	w.svidsMu.Unlock()
 
 	err = resp.Send(&pb.X509SVIDResponse{
 		Svids: []*pb.X509SVID{
@@ -277,9 +284,12 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 	if err != nil {
 		return nil, fmt.Errorf("failed to generated workload keypair: %v", err)
 	}
+
+	w.svidsMu.Lock()
 	w.svids[sid.String()] = svidData{
 		keyBytes: privateKeyBytes,
 	}
+	w.svidsMu.Unlock()
 
 	token, err := w.c.CA.SignWorkloadWITSVID(ctx, WorkloadWITSVIDParams{
 		SPIFFEID: sid.ToSpiffeID(),

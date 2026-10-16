@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	spiredevserver "github.com/cofide/minispire/pkg/spire-devserver"
-	wimse_pb "github.com/cofide/minispire/pkg/wimse"
 	pb "github.com/spiffe/go-spiffe/v2/proto/spiffe/workload"
 	"google.golang.org/grpc"
 )
@@ -50,15 +49,15 @@ func NewMiniSPIREServer() *MiniSPIREServer {
 		log.Fatalf("failed to listen to SPIRE socket: %v", err)
 	}
 
-	grpcServer := grpc.NewServer(
-		grpc.Creds(spiredevserver.NewCredentials()))
+	grpcServer := grpc.NewServer(append(
+		spiredevserver.RequireWorkloadAPIHeader(),
+		grpc.Creds(spiredevserver.NewCredentials()))...)
 
 	wl := spiredevserver.NewWorkloadHandler(spiredevserver.Config{
 		Domain: trustDomain,
 		CA:     ca,
 	})
 	pb.RegisterSpiffeWorkloadAPIServer(grpcServer, wl)
-	wimse_pb.RegisterMiniSPIREWorkloadAPIServer(grpcServer, wl)
 
 	return &MiniSPIREServer{
 		listener: lis,

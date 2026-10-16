@@ -1,6 +1,3 @@
-proto-gen:
-    buf generate --path ./pkg/wimse
-
 build:
     go build -o minispire ./cmd/main.go
 

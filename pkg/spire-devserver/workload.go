@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -17,13 +16,16 @@ import (
 	"time"
 
 	"github.com/cofide/cofide-sdk-go/pkg/id"
-	wimse_pb "github.com/cofide/minispire/pkg/wimse"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/spiffe/go-spiffe/v2/bundle/jwtbundle"
 	pb "github.com/spiffe/go-spiffe/v2/proto/spiffe/workload"
 	spiffeid "github.com/spiffe/go-spiffe/v2/spiffeid"
 	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 )
 
 type Config struct {
@@ -45,7 +47,6 @@ type WorkloadHandler struct {
 	svidsMu sync.RWMutex
 
 	pb.UnimplementedSpiffeWorkloadAPIServer
-	wimse_pb.UnimplementedMiniSPIREWorkloadAPIServer
 }
 
 func NewWorkloadHandler(c Config) *WorkloadHandler {
@@ -272,30 +273,80 @@ func (w *WorkloadHandler) generateSpiffeID(ctx context.Context) (*id.SPIFFEID, e
 	return id.NewID(w.c.Domain, info)
 }
 
-func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVIDRequest) (*wimse_pb.WITSVIDResponse, error) {
-	resp := new(wimse_pb.WITSVIDResponse)
+const witSVIDTTL = 5 * time.Minute
 
+// checkWorkloadAPIHeader rejects callers that do not send the
+// "workload.spiffe.io: true" metadata the SPIFFE Workload API requires, so
+// that other gRPC clients are not handed private keys by accident.
+func checkWorkloadAPIHeader(ctx context.Context) error {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if v := md.Get("workload.spiffe.io"); len(v) == 0 || v[0] != "true" {
+		return status.Error(codes.InvalidArgument, `security header missing from request: "workload.spiffe.io: true"`)
+	}
+	return nil
+}
+
+// RequireWorkloadAPIHeader returns server options that apply the
+// "workload.spiffe.io: true" check to every Workload API call.
+func RequireWorkloadAPIHeader() []grpc.ServerOption {
+	return []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+			if err := checkWorkloadAPIHeader(ctx); err != nil {
+				return nil, err
+			}
+			return handler(ctx, req)
+		}),
+		grpc.ChainStreamInterceptor(func(srv any, ss grpc.ServerStream, _ *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+			if err := checkWorkloadAPIHeader(ss.Context()); err != nil {
+				return err
+			}
+			return handler(srv, ss)
+		}),
+	}
+}
+
+func (w *WorkloadHandler) FetchWITSVID(req *pb.WITSVIDRequest, stream pb.SpiffeWorkloadAPI_FetchWITSVIDServer) error {
+	ctx := stream.Context()
 	sid, err := w.generateSpiffeID(ctx)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	if req.SpiffeId != "" && req.SpiffeId != sid.String() {
+		return status.Errorf(codes.PermissionDenied, "workload is not entitled to %s", req.SpiffeId)
 	}
 
-	publicKey, privateKeyBytes, err := generateWorkloadKeyPair()
+	// Re-issue at half the TTL until the client goes away.
+	for {
+		resp, err := w.mintWITSVID(ctx, sid)
+		if err != nil {
+			return err
+		}
+		if err := stream.Send(resp); err != nil {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(witSVIDTTL / 2):
+		}
+	}
+}
+
+func (w *WorkloadHandler) mintWITSVID(ctx context.Context, sid *id.SPIFFEID) (*pb.WITSVIDResponse, error) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generated workload keypair: %v", err)
+		return nil, fmt.Errorf("failed to generate workload keypair: %v", err)
 	}
-
-	w.svidsMu.Lock()
-	w.svids[sid.String()] = svidData{
-		keyBytes: privateKeyBytes,
+	privateJWK, err := jose.JSONWebKey{Key: key, Algorithm: "ES256", Use: "sig"}.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode workload private key: %v", err)
 	}
-	w.svidsMu.Unlock()
 
 	token, err := w.c.CA.SignWorkloadWITSVID(ctx, WorkloadWITSVIDParams{
 		SPIFFEID: sid.ToSpiffeID(),
-		TTL:      time.Minute * 5,
+		TTL:      witSVIDTTL,
 		Key: jose.JSONWebKey{
-			Key:       publicKey,
+			Key:       &key.PublicKey,
 			Algorithm: "ES256",
 			Use:       "sig",
 		},
@@ -306,25 +357,34 @@ func (w *WorkloadHandler) MintWITSVID(ctx context.Context, req *wimse_pb.WITSVID
 
 	log.Printf("WIT-SVID issued: %s\n", token)
 
-	resp.Svids = append(resp.Svids, &wimse_pb.WITSVID{
-		SpiffeId:   sid.String(),
-		WitSvid:    token,
-		WitSvidKey: base64.StdEncoding.EncodeToString(privateKeyBytes),
-	})
-
-	return resp, nil
+	return &pb.WITSVIDResponse{
+		Svids: []*pb.WITSVID{{
+			SpiffeId:   sid.String(),
+			WitSvid:    token,
+			WitSvidKey: string(privateJWK),
+		}},
+	}, nil
 }
 
-func generateWorkloadKeyPair() (*ecdsa.PublicKey, []byte, error) {
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+func (w *WorkloadHandler) FetchWITBundles(req *pb.WITBundlesRequest, stream pb.SpiffeWorkloadAPI_FetchWITBundlesServer) error {
+	// WIT-SVIDs are signed with the CA's JWT key.
+	jwtKey := w.c.CA.jwtKey
+	bundle := jwtbundle.FromJWTAuthorities(
+		spiffeid.RequireTrustDomainFromString(w.c.Domain),
+		map[string]crypto.PublicKey{jwtKey.Kid: jwtKey.Signer.Public()},
+	)
+	bundleBytes, err := bundle.Marshal()
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
-	privateKeyBytes, err := x509.MarshalPKCS8PrivateKey(key)
-	if err != nil {
-		return nil, nil, err
+	if err := stream.Send(&pb.WITBundlesResponse{
+		Bundles: map[string]string{w.c.Domain: string(bundleBytes)},
+	}); err != nil {
+		return err
 	}
 
-	return &key.PublicKey, privateKeyBytes, nil
+	// The key never rotates, so there is nothing further to send.
+	<-stream.Context().Done()
+	return nil
 }

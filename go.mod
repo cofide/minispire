@@ -4,16 +4,16 @@ go 1.25.3
 
 require (
 	github.com/cofide/cofide-sdk-go v0.4.2
-	github.com/go-jose/go-jose/v4 v4.1.3
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/shirou/gopsutil/v4 v4.25.8
-	github.com/spiffe/go-spiffe/v2 v2.6.0
+	github.com/spiffe/go-spiffe/v2 v2.7.0
 	github.com/spiffe/spire v1.13.2
-	golang.org/x/sys v0.38.0
-	google.golang.org/grpc v1.76.0
-	google.golang.org/protobuf v1.36.10
+	golang.org/x/sys v0.39.0
+	google.golang.org/grpc v1.79.3
 )
 
 require (
+	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ebitengine/purego v0.8.4 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -22,7 +22,8 @@ require (
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )

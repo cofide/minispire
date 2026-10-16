@@ -15,7 +15,6 @@ import (
 	"math/big"
 	"time"
 
-	cofideid "github.com/cofide/cofide-sdk-go/pkg/id"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/cryptosigner"
 	"github.com/go-jose/go-jose/v4/jwt"
@@ -214,11 +213,10 @@ func (i *InMemoryCA) SignWorkloadWITSVID(ctx context.Context, params WorkloadWIT
 	}
 
 	claims := map[string]any{
-		"sub": cofideid.FromSpiffeID(params.SPIFFEID).WIMSEIDString(),
-		"aud": "", // TODO: aud is not part of the WIMSE WIT spec, but is required by the signer here
+		"sub": params.SPIFFEID.String(),
 		"exp": jwt.NewNumericDate(time.Now().Add(params.TTL)),
 		"iat": jwt.NewNumericDate(time.Now()),
-		"iss": fmt.Sprintf("wimse://%s", params.SPIFFEID.TrustDomain()),
+		"iss": params.SPIFFEID.TrustDomain().IDString(),
 		"cnf": map[string]any{
 			"jwk": params.Key,
 		},
@@ -270,7 +268,7 @@ func (i *InMemoryCA) ValidateWorkloadWITSVID(rawToken string, id spiffeid.ID) (*
 
 	now := time.Now()
 	switch {
-	case claims.Subject != cofideid.FromSpiffeID(id).WIMSEIDString():
+	case claims.Subject != id.String():
 		return nil, fmt.Errorf(`invalid WIT-SVID "sub" claim: expected %q but got %q`, id, claims.Subject)
 	case claims.Expiry == nil:
 		return nil, errors.New(`invalid WIT-SVID "exp" claim: required but missing`)

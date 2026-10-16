@@ -22,6 +22,23 @@ Or as an external dependency
 go run github.com/cofide/minispire/cmd
 ```
 
+## Example WIT-SVID client
+
+`cmd/wit-client` is a small client built on the go-spiffe `workloadapi` package. It fetches a WIT-SVID and the WIT bundle from the Workload API, verifies the SVID against the bundle, and prints the SPIFFE ID, key ID, expiry and token claims. It exits non-zero if any step fails.
+
+With `minispire` running in one terminal, run the client in another:
+
+```
+go run ./cmd/wit-client
+```
+
+Flags:
+
+- `-addr`: Workload API address, defaulting to `unix:///tmp/spire.sock`.
+- `-timeout`: overall timeout, defaulting to `10s`.
+
+`minispire` derives the SPIFFE ID from the calling process, so the ID in the output includes the client's binary name, UID, GID and PID. A successful run ends with `Verified:  OK`.
+
 ## Production Use Cases
 
 At [Cofide](https://www.cofide.io), we're building a workload identity platform that is seamless and secure for multi and hybrid cloud environments. Feel free to browse our [public documentation](https://docs.cofide.dev) or read our introductory [blog post](https://www.cofide.io/resources/introducing-cofide-connect-the-control-plane-for-workload-identity-and-access-management-iam) for more info.

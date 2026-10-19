@@ -3,6 +3,9 @@ minispire
 # don't ignore pkgs named the same as binary!
 !minispire/
 
+# anchored so cmd/wit-client is not ignored
+/wit-client
+
 # ide workspaces
 .idea
 .vscode

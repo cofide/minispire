@@ -17,3 +17,18 @@ jobs:
           go-version-file: go.mod
       - name: Build and run tests
         run: just test
+
+  test-wit-client:
+    name: test WIT client
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Install just
+        uses: taiki-e/install-action@just
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Run WIT-SVID client against minispire
+        run: just test-wit-client
